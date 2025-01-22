@@ -142,10 +142,12 @@ targets += $(output-symdump)
 $(output-symdump): $(modpost-deps) FORCE
 	$(call if_changed,modpost)
 
+ifeq ($(findstring elf,$(if $(CONFIG_OUTPUT_FORMAT),$(CONFIG_OUTPUT_FORMAT),elf)),elf)
 __modpost: $(output-symdump)
 ifndef CONFIG_LIVEPATCH
 	$(Q)rm -f $(MODULES_LIVEPATCH)
 	$(Q)touch $(MODULES_LIVEPATCH)
+endif
 endif
 PHONY += FORCE
 FORCE:

@@ -161,6 +161,10 @@ kallsyms()
 		kallsymopt="${kallsymopt} --base-relative"
 	fi
 
+	if is_enabled CONFIG_KALLSYMS_USE_DATA_SECTION; then
+		kallsymopt="${kallsymopt} --use-data-section"
+	fi
+
 	if is_enabled CONFIG_LTO_CLANG; then
 		kallsymopt="${kallsymopt} --lto-clang"
 	fi

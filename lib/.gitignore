@@ -3,7 +3,9 @@
 /crc64table.h
 /default.bconf
 /gen_crc32table
+/gen_crc32table.exe
 /gen_crc64table
+/gen_crc64table.exe
 /oid_registry_data.c
 /test_fortify.log
 /test_fortify/*.log

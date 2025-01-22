@@ -275,10 +275,13 @@ static void
 xfs_buf_free_pages(
 	struct xfs_buf	*bp)
 {
+#ifdef CONFIG_MMU
 	uint		i;
+#endif
 
 	ASSERT(bp->b_flags & _XBF_PAGES);
 
+#ifdef CONFIG_MMU
 	if (xfs_buf_is_vmapped(bp))
 		vm_unmap_ram(bp->b_addr, bp->b_page_count);
 
@@ -286,6 +289,10 @@ xfs_buf_free_pages(
 		if (bp->b_pages[i])
 			__free_page(bp->b_pages[i]);
 	}
+#else
+	free_pages((unsigned long)page_to_virt(bp->b_pages[0]),
+		order_base_2(bp->b_page_count));
+#endif
 	mm_account_reclaimed_pages(bp->b_page_count);
 
 	if (bp->b_pages != bp->b_page_array)
@@ -387,9 +394,21 @@ xfs_buf_alloc_pages(
 	 */
 	for (;;) {
 		long	last = filled;
+#ifndef CONFIG_MMU
+		int i;
+		struct page *pages;
+		int count = bp->b_page_count;
 
+		pages = alloc_pages(gfp_mask, order_base_2(count));
+		if (pages) {
+			for (i = 0; i < count; i++)
+				bp->b_pages[i] = pages + i;
+		}
+		filled = count;
+#else
 		filled = alloc_pages_bulk_array(gfp_mask, bp->b_page_count,
 						bp->b_pages);
+#endif
 		if (filled == bp->b_page_count) {
 			XFS_STATS_INC(bp->b_mount, xb_page_found);
 			break;
@@ -424,6 +443,7 @@ _xfs_buf_map_pages(
 	} else if (flags & XBF_UNMAPPED) {
 		bp->b_addr = NULL;
 	} else {
+#ifdef CONFIG_MMU
 		int retried = 0;
 		unsigned nofs_flag;
 
@@ -444,6 +464,9 @@ _xfs_buf_map_pages(
 			vm_unmap_aliases();
 		} while (retried++ <= 1);
 		memalloc_nofs_restore(nofs_flag);
+#else
+		bp->b_addr = page_to_virt(bp->b_pages[0]);
+#endif
 
 		if (!bp->b_addr)
 			return -ENOMEM;

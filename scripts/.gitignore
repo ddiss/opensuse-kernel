@@ -3,9 +3,11 @@
 /generate_rust_target
 /insert-sys-cert
 /kallsyms
+/kallsyms.exe
 /module.lds
 /recordmcount
 /sign-file
 /sorttable
 /target.json
 /unifdef
+/unifdef.exe
