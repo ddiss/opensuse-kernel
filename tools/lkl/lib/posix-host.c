@@ -538,6 +538,11 @@ static void *posix_memset(void *s, int c, unsigned long n)
 	return memset(s, c, (size_t)n);
 }
 
+static void *posix_memmove(void *dest, const void *src, unsigned long n)
+{
+	return memmove(dest, src, (size_t)n);
+}
+
 struct lkl_host_operations lkl_host_ops = {
 	.panic = panic,
 	.thread_create = thread_create,
@@ -576,6 +581,7 @@ struct lkl_host_operations lkl_host_ops = {
 	.jmp_buf_longjmp = jmp_buf_longjmp,
 	.memcpy = posix_memcpy,
 	.memset = posix_memset,
+	.memmove = posix_memmove,
 	.mmap = lkl_mmap,
 	.munmap = lkl_munmap,
 #ifdef LKL_HOST_CONFIG_VFIO_PCI
