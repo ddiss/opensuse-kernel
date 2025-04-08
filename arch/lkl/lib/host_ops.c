@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 
 #include <asm/host_ops.h>
+#include <linux/kernel.h>
 #include <linux/stdarg.h>
-#include <linux/sprintf.h>
 
 static int lkl_vprintf(const char *fmt, va_list args)
 {
