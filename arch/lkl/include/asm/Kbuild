@@ -32,3 +32,5 @@ generic-y += termbits.h
 generic-y += termios.h
 generic-y += time.h
 generic-y += user.h
+
+generated-y += config.h
