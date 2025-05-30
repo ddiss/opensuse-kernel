@@ -73,11 +73,8 @@ config 64BIT
 config COREDUMP
        def_bool n
 
-config BIG_ENDIAN
-       def_bool n
-
 config CPU_BIG_ENDIAN
-       def_bool BIG_ENDIAN
+       def_bool n
 
 config GENERIC_CSUM
        def_bool y
