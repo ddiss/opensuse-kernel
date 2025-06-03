@@ -1086,11 +1086,8 @@ SMB2_negotiate(const unsigned int xid,
 			cifs_server_dbg(VFS, "Missing expected negotiate contexts\n");
 	}
 
-	if (server->cipher_type && !rc) {
+	if (server->cipher_type && !rc)
 		rc = smb3_crypto_aead_allocate(server);
-		if (rc)
-			cifs_server_dbg(VFS, "%s: crypto alloc failed, rc=%d\n", __func__, rc);
-	}
 neg_exit:
 	free_rsp_buf(resp_buftype, rsp);
 	return rc;
@@ -4792,6 +4789,13 @@ smb2_async_writev(struct cifs_writedata *wdata,
 				     rc);
 		kref_put(&wdata->refcount, release);
 		cifs_stats_fail_inc(tcon, SMB2_WRITE_HE);
+
+		/*
+		 * If the server is going to reconnect, we must return a retryable error so we don't
+		 * lose/discard data by ensuring it gets sent again.
+		 */
+		if (server->tcpStatus != CifsExiting)
+			rc = -EAGAIN;
 	}
 
 async_writev_out:
