@@ -12046,6 +12046,15 @@ S:	Maintained
 F:	drivers/misc/lkdtm/*
 F:	tools/testing/selftests/lkdtm/*
 
+LINUX KERNEL LIBRARY
+M:	Octavian Purdila <octavian.purdila@intel.com>
+M:	Hajime Tazaki <thehajime@gmail.com>
+L:	linux-kernel-library@freelists.org
+S:	Maintained
+F:	Documentation/lkl/
+F:	arch/lkl/
+F:	tools/lkl/
+
 LINUX KERNEL MEMORY CONSISTENCY MODEL (LKMM)
 M:	Alan Stern <stern@rowland.harvard.edu>
 M:	Andrea Parri <parri.andrea@gmail.com>
