@@ -629,12 +629,8 @@ int __legitimize_mnt(struct vfsmount *bastard, unsigned seq)
 	smp_mb();			// see mntput_no_expire()
 	if (likely(!read_seqretry(&mount_lock, seq)))
 		return 0;
-	if (bastard->mnt_flags & MNT_SYNC_UMOUNT) {
-		mnt_add_count(mnt, -1);
-		return 1;
-	}
 	lock_mount_hash();
-	if (unlikely(bastard->mnt_flags & MNT_DOOMED)) {
+	if (unlikely(bastard->mnt_flags & (MNT_SYNC_UMOUNT | MNT_DOOMED))) {
 		mnt_add_count(mnt, -1);
 		unlock_mount_hash();
 		return 1;
@@ -2022,6 +2018,9 @@ struct vfsmount *clone_private_mount(const struct path *path)
 	if (!check_mnt(old_mnt))
 		goto invalid;
 
+	if (!ns_capable(old_mnt->mnt_ns->user_ns, CAP_SYS_ADMIN))
+		goto perm;
+
 	if (has_locked_children(old_mnt, path->dentry))
 		goto invalid;
 
@@ -2039,6 +2038,10 @@ struct vfsmount *clone_private_mount(const struct path *path)
 invalid:
 	up_read(&namespace_sem);
 	return ERR_PTR(-EINVAL);
+
+perm:
+	up_read(&namespace_sem);
+	return ERR_PTR(-EPERM);
 }
 EXPORT_SYMBOL_GPL(clone_private_mount);
 
@@ -2375,6 +2378,10 @@ static int do_change_type(struct path *path, int ms_flags)
 		return -EINVAL;
 
 	namespace_lock();
+	if (!check_mnt(mnt)) {
+		err = -EINVAL;
+		goto out_unlock;
+	}
 	if (type == MS_SHARED) {
 		err = invent_group_ids(mnt, recurse);
 		if (err)
@@ -3994,6 +4001,11 @@ static int can_idmap_mount(const struct mount_kattr *kattr, struct mount *mnt)
 
 	if (!kattr->mnt_idmap)
 		return 0;
+
+	/* Don't allow idmaps with no mapping defined */
+	if (kattr->mnt_userns->uid_map.nr_extents == 0 ||
+	    kattr->mnt_userns->gid_map.nr_extents == 0)
+		return -EINVAL;
 
 	/*
 	 * Creating an idmapped mount with the filesystem wide idmapping
