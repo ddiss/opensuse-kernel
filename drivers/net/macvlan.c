@@ -612,7 +612,8 @@ static int macvlan_hard_header(struct sk_buff *skb, struct net_device *dev,
 
 static const struct header_ops macvlan_hard_header_ops = {
 	.create  	= macvlan_hard_header,
-	.parse		= eth_header_parse,
+	.parse		= parse_header_kabi_helper,
+	.parse2		= eth_header_parse2,
 	.cache		= eth_header_cache,
 	.cache_update	= eth_header_cache_update,
 };
@@ -946,6 +947,8 @@ static int macvlan_init(struct net_device *dev)
 	dev->hw_enc_features    |= dev->features;
 	netif_inherit_tso_max(dev, lowerdev);
 	dev->hard_header_len	= lowerdev->hard_header_len;
+	dev->needed_headroom	= lowerdev->needed_headroom;
+	dev->needed_tailroom	= lowerdev->needed_tailroom;
 	macvlan_set_lockdep_class(dev);
 
 	vlan->pcpu_stats = netdev_alloc_pcpu_stats(struct vlan_pcpu_stats);
@@ -1825,6 +1828,8 @@ static int macvlan_device_event(struct notifier_block *unused,
 	case NETDEV_FEAT_CHANGE:
 		list_for_each_entry(vlan, &port->vlans, list) {
 			netif_inherit_tso_max(vlan->dev, dev);
+			vlan->dev->needed_headroom = dev->needed_headroom;
+			vlan->dev->needed_tailroom = dev->needed_tailroom;
 			netdev_update_features(vlan->dev);
 		}
 		break;
